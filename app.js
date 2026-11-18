@@ -19,7 +19,7 @@ const $ = (id) => document.getElementById(id);
 
 // JARVIS Lite - Secure Vercel Backend
 const GROQ_BACKEND_URL =
-    "https://jarvis-pro-gamma.vercel.app/chat";
+    "https://jarvis-pro-gamma.vercel.app/api/chat";
 
 async function askGroq(messages) {
     const response = await fetch(GROQ_BACKEND_URL, {
