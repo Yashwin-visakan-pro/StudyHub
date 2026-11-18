@@ -22,7 +22,7 @@ const GROQ_KEY_STORAGE = "studyhub_groq_key";
 async function getGroqKey() {
     let key = localStorage.getItem(GROQ_KEY_STORAGE);
     if (key) return key;
-    const response = await fetch(new URL("./api/index.json", import.meta.url), { cache: "no-store" });
+    const response = await fetch(new URL("./index.json", import.meta.url), { cache: "no-store" });
     if (!response.ok) throw new Error("Could not load api/index.json (HTTP " + response.status + ").");
     const config = await response.json();
     if (!config.apiKey || config.apiKey === "PASTE_YOUR_GROQ_API_KEY_HERE") throw new Error("Add your Groq API key to api/index.json first.");
