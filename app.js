@@ -16,35 +16,31 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const $ = (id) => document.getElementById(id);
-// GitHub Pages configuration: the JSON file is public. Never use a key here
-// that you need to keep secret. For real privacy, move Groq calls to a backend.
-const GROQ_KEY_STORAGE = "studyhub_groq_key";
-async function getGroqKey() {
-    let key = localStorage.getItem(GROQ_KEY_STORAGE);
-    if (key) return key;
-    const response = await fetch(new URL("./index.json", import.meta.url), { cache: "no-store" });
-    if (!response.ok) throw new Error("Could not load api/index.json (HTTP " + response.status + ").");
-    const config = await response.json();
-    if (!config.apiKey || config.apiKey === "PASTE_YOUR_GROQ_API_KEY_HERE") throw new Error("Add your Groq API key to api/index.json first.");
-    key = String(config.apiKey).trim();
-    localStorage.setItem(GROQ_KEY_STORAGE, key);
-    return key;
-}
+
+// JARVIS Lite - Secure Vercel Backend
+const GROQ_BACKEND_URL =
+    "https://jarvis-pro-gamma.vercel.app/api/chat";
+
 async function askGroq(messages) {
-    const apiKey = await getGroqKey();
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const response = await fetch(GROQ_BACKEND_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        headers: {
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify({
-            model: "openai/gpt-oss-120b",
-            messages: [{ role: "system", content: "You are JARVIS Lite, a helpful study assistant. Explain concepts clearly, use readable Markdown, and provide Mermaid flowcharts when useful.The flowcharts should be a simple representation of the concept being explained not a random images." }, ...messages],
-            temperature: 0.7,
-            max_tokens: 2048
+            messages: messages
         })
     });
+
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error?.message || `Groq request failed (${response.status}).`);
-    return data.choices?.[0]?.message?.content || "I couldn't generate a response.";
+
+    if (!response.ok) {
+        throw new Error(
+            data.error || `JARVIS request failed (${response.status})`
+        );
+    }
+
+    return data.answer || "I couldn't generate a response.";
 }
 
 const state = { user:null, isSignup:false, day:"Monday", timetable:[], activity:[], chat:[], unsubTimetable:null, unsubActivity:null, busy:false };
