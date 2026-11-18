@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1018">
+  <meta name="description" content="Study Hub — a shared study timetable and personal progress dashboard.">
+  <title>Study Hub — Visaka Softwares</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <style>
+    /* Daily checklist extension; original Study Hub stylesheet remains active. */
+    .daily-mission{background:var(--panel,#111923);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:18px;padding:22px;margin:0 0 28px;box-shadow:0 12px 32px rgba(0,0,0,.12)}
+    .mission-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.mission-top h2{font:700 1.25rem Manrope,sans-serif;margin:6px 0}.mission-date{color:var(--muted,#9aa6b5);font-size:.88rem;margin:0}
+    .mission-percent{text-align:right;min-width:76px}.mission-percent strong{display:block;font:800 1.8rem Manrope,sans-serif;color:var(--accent,#df3838)}.mission-percent span,.mission-source{font-size:.65rem;letter-spacing:.1em;color:var(--muted,#9aa6b5);font-weight:700}
+    .mission-progress{height:8px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin:18px 0}.mission-progress i{display:block;width:0;height:100%;background:var(--accent,#df3838);border-radius:99px;transition:width .25s ease}
+    .mission-tasks{display:grid;gap:9px}.mission-task{display:flex;align-items:flex-start;gap:12px;padding:12px 13px;border:1px solid var(--border,rgba(255,255,255,.08));border-radius:12px;background:rgba(255,255,255,.018);cursor:pointer;transition:border-color .2s,background .2s}
+    .mission-task:hover{border-color:rgba(223,56,56,.45);background:rgba(223,56,56,.045)}.mission-task input{accent-color:var(--accent,#df3838);width:17px;height:17px;margin:2px 0 0;flex:0 0 auto;cursor:pointer}
+    .mission-task span{font-size:.91rem;line-height:1.5;color:var(--text,#e9edf3)}.mission-task.done span{text-decoration:line-through;color:var(--muted,#9aa6b5)}
+    .mission-bottom{display:flex;justify-content:space-between;gap:12px;margin-top:14px;color:var(--muted,#9aa6b5);font-size:.78rem}
+    .bio-target{display:flex;align-items:center;gap:14px;margin-top:18px;padding:14px 16px;border-radius:13px;background:rgba(223,56,56,.075);border:1px solid rgba(223,56,56,.2)}
+    .bio-target-mark{font:800 1.2rem Manrope,sans-serif;color:var(--accent,#df3838);border-right:1px solid rgba(223,56,56,.25);padding-right:14px}.bio-target b{font-size:.82rem;letter-spacing:.045em}.bio-target p{margin:4px 0 0;color:var(--muted,#9aa6b5);font-size:.8rem;line-height:1.45}
+    .mission-empty{padding:18px;border:1px dashed var(--border,rgba(255,255,255,.15));border-radius:12px;color:var(--muted,#9aa6b5);font-size:.88rem}
+    @media(max-width:600px){.daily-mission{padding:16px}.mission-top h2{font-size:1.08rem}.mission-percent strong{font-size:1.5rem}.mission-bottom{flex-direction:column;gap:5px}.bio-target{align-items:flex-start}}
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script type="module" src="./app.js"></script>
+
+  <style>
+    .timetable-overview{padding:22px;margin:0 0 26px}.tt-summary-top{display:flex;justify-content:space-between;align-items:center;gap:18px}.tt-summary-top h2{font:800 2.25rem Manrope,sans-serif;margin:5px 0}.tt-summary-side{text-align:right}.tt-summary-side b{display:block;font:800 1.8rem Manrope,sans-serif}.tt-summary-side small,.tt-summary-bottom{font-size:.68rem;letter-spacing:.08em;color:var(--muted,#9aa6b5);font-weight:700}.tt-progress-track,.tt-mini-track{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}.tt-progress-track{margin:16px 0 12px}.tt-progress-track i,.tt-mini-track i{display:block;height:100%;border-radius:99px;background:var(--accent,#df3838);transition:width .25s}.tt-summary-bottom{display:flex;justify-content:space-between;gap:12px;letter-spacing:0}.tt-toolbar{display:flex;justify-content:space-between;align-items:end;margin:24px 0 13px}.tt-toolbar h2{font:700 1.3rem Manrope,sans-serif;margin:5px 0}.all-days-list{display:grid;gap:13px}.tt-day-card{background:var(--panel,#111923);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:16px;overflow:hidden}.tt-day-card.is-today{border-color:rgba(223,56,56,.55);box-shadow:0 0 0 1px rgba(223,56,56,.08)}.tt-day-head{width:100%;display:flex;align-items:center;gap:16px;padding:15px;background:transparent;color:inherit;border:0;text-align:left;cursor:pointer}.tt-date-block{width:55px;min-width:55px;display:flex;flex-direction:column;align-items:center;border-right:1px solid var(--border,rgba(255,255,255,.1));padding-right:13px}.tt-date-block .tt-weekday{font-size:.62rem;letter-spacing:.1em;color:var(--muted,#9aa6b5);font-weight:800}.tt-date-block b{font:800 1.55rem Manrope,sans-serif;line-height:1.3}.tt-date-block small{font-size:.68rem;color:var(--muted,#9aa6b5)}.tt-day-info{min-width:0;flex:1}.tt-day-info strong{display:block;font-size:.91rem}.tt-day-info>small{display:block;color:var(--muted,#9aa6b5);font-size:.76rem;margin:4px 0 8px}.tt-mini-track{height:5px;max-width:340px}.tt-day-percent{font:800 .85rem Manrope,sans-serif;white-space:nowrap;color:var(--accent,#df3838)}.tt-chevron{display:inline-block;margin-left:7px;color:var(--muted,#9aa6b5);transition:transform .2s}.tt-day-head[aria-expanded=true] .tt-chevron{transform:rotate(180deg)}.tt-day-tasks{padding:0 15px 15px 86px;display:grid;gap:8px}.tt-day-tasks[hidden]{display:none}.tt-day-footer{display:flex;justify-content:space-between;gap:12px;padding:10px 2px 0;color:var(--muted,#9aa6b5);font-size:.75rem}.tt-day-footer b{color:var(--text,#e9edf3)}.tt-today-tag,.tt-exam-tag{display:inline-block;font:700 .58rem Manrope,sans-serif;letter-spacing:.06em;padding:3px 6px;border-radius:5px;background:rgba(223,56,56,.13);color:var(--accent,#df3838);vertical-align:middle;margin-left:5px}.tt-exam-tag{background:rgba(65,145,105,.14);color:#64c995}.tt-day-tasks .mission-task{padding:10px 12px}.tt-day-tasks .mission-task span{font-size:.86rem}
+    @media(max-width:600px){.tt-day-head{gap:11px;padding:12px}.tt-date-block{width:47px;min-width:47px;padding-right:9px}.tt-day-info strong{font-size:.82rem}.tt-day-tasks{padding:0 12px 12px}.tt-summary-bottom{flex-direction:column;gap:5px}.tt-day-footer{flex-direction:column;gap:4px}}
+  </style>
+
+</head>
+
+<body>
+  <div id="splash" class="splash">
+    <div class="splash-mark">S</div>
+    <div class="splash-title">STUDY HUB</div>
+    <div class="splash-sub">POWERED BY VISAKA SOFTWARES</div>
+    <div class="splash-loader"><i></i></div>
+  </div>
+  <section id="authView" class="auth-view hidden">
+    <div class="auth-decoration">
+      <div class="orb orb-one"></div>
+      <div class="orb orb-two"></div>
+      <div class="auth-brand">
+        <div class="brand-mark">S</div><span>STUDY HUB</span>
+      </div>
+      <div class="auth-copy"><span class="eyebrow">YOUR SPACE TO FOCUS</span>
+        <h1>Make every<br><em>study session</em><br>count.</h1>
+        <p>One shared timetable. Your own progress. A smarter way to prepare together.</p>
+      </div>
+      <div class="auth-foot">© 2026 Visaka Softwares</div>
+    </div>
+    <div class="auth-panel">
+      <div class="auth-card">
+        <div class="mobile-brand">
+          <div class="brand-mark">S</div><b>STUDY HUB</b>
+        </div><span class="eyebrow">WELCOME</span>
+        <h2>Let's get started.</h2>
+        <p class="muted">Sign in to continue to your study space.</p>
+        <button id="googleBtn" class="google-btn" type="button"><span class="google-g">G</span> Continue with
+          Google</button>
+        <div class="or-line"><span>or continue with email</span></div>
+        <form id="authForm"><label for="emailInput">Email address</label><input id="emailInput" type="email"
+            placeholder="you@example.com" autocomplete="email" required><label
+            for="passwordInput">Password</label><input id="passwordInput" type="password"
+            placeholder="Enter your password" autocomplete="current-password" minlength="6" required><button
+            id="emailBtn" class="primary-btn full" type="submit">Sign in <span>→</span></button></form>
+        <p id="authError" class="error-text" role="alert"></p>
+        <p class="switch-auth"><span id="authModeText">New to Study Hub?</span> <button id="authModeBtn"
+            type="button">Create account</button></p>
+        <p class="tiny-note">By continuing, you agree to use this study space responsibly.</p>
+      </div>
+    </div>
+  </section>
+  <section id="appView" class="app-view hidden">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-top">
+        <div class="auth-brand">
+          <div class="brand-mark">S</div><span>STUDY HUB</span>
+        </div><button id="closeSidebar" class="icon-btn close-sidebar" aria-label="Close menu">×</button>
+      </div>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="side-nav"><button class="nav-item active" data-page="overview"><span
+            class="nav-icon">⌂</span>Overview</button><button class="nav-item" data-page="timetable"><span
+            class="nav-icon">▦</span>Timetable</button><button class="nav-item" data-page="activity"><span
+            class="nav-icon">◷</span>My activity</button><button class="nav-item" data-page="jarvis"><span
+            class="nav-icon">✳</span>JARVIS Lite<span class="ai-tag">AI</span></button></nav>
+      <div class="sidebar-bottom">
+        <div class="side-tip"><span class="tip-icon">✦</span><b>Small steps add up.</b>
+          <p>Stay consistent. Your progress is built one session at a time.</p>
+        </div>
+        <div class="profile-mini"><img id="userAvatar" src="" alt="Profile">
+          <div class="profile-text"><b id="userName">Student</b><small id="userEmail"></small></div><button
+            id="signOutBtn" class="icon-btn signout" title="Sign out" aria-label="Sign out">↗</button>
+        </div>
+      </div>
+    </aside>
+    <main class="main-area">
+      <header class="topbar"><button id="menuBtn" class="icon-btn menu-btn" aria-label="Open menu">☰</button>
+        <div>
+          <div class="breadcrumb">STUDY SPACE <span>/</span> <b id="pageHeading">Overview</b></div>
+        </div>
+        <div class="topbar-right"><span class="online-dot"></span><span class="online-label">SYNCED WORKSPACE</span>
+          <div class="top-avatar"><img id="topAvatar" src="" alt=""></div>
+        </div>
+      </header>
+      <div class="content-wrap">
+        <section id="page-overview" class="page active">
+          <div class="welcome-row">
+            <div><span id="todayLabel" class="eyebrow">YOUR STUDY OVERVIEW</span>
+              <h1>Good to see you<span class="period">.</span></h1>
+              <p class="muted">A clear plan makes a focused day.</p>
+            </div>
+            <div class="date-card"><span id="dateDay">MON</span><strong id="dateNumber">18</strong><small
+                id="dateMonth">NOVEMBER 2026</small></div>
+          </div>
+          <div class="stats-grid">
+            <article class="stat-card">
+              <div class="stat-top"><span>COMPLETED TODAY</span><span class="stat-icon green">✓</span></div><strong
+                id="completedStat">0</strong><small>Sessions checked off</small>
+            </article>
+            <article class="stat-card">
+              <div class="stat-top"><span>DAILY PROGRESS</span><span class="stat-icon blue">◴</span></div><strong
+                id="progressStat">0%</strong>
+              <div class="progress-track"><i id="progressBar"></i></div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-top"><span>TOTAL COMPLETIONS</span><span class="stat-icon purple">↗</span></div><strong
+                id="totalStat">0</strong><small>Across your study history</small>
+            </article>
+          </div>
+
+          <section class="daily-mission" id="dailyMission">
+            <div class="mission-top">
+              <div><span class="eyebrow">TODAY'S FOCUS</span><h2>Daily study checklist</h2><p class="mission-date" id="missionDate">Loading today's plan…</p></div>
+              <div class="mission-percent"><strong id="missionPercent">0%</strong><span>COMPLETED</span></div>
+            </div>
+            <div class="mission-progress"><i id="missionProgressBar"></i></div>
+            <div class="mission-tasks" id="missionTasks"><div class="empty-state">Loading tasks from timetable.data…</div></div>
+            <div class="mission-bottom"><span id="missionCount">0 of 0 tasks completed</span><span class="mission-source">SOURCE: timetable.data</span></div>
+            <div class="bio-target"><div class="bio-target-mark">500</div><div><b>THE TARGET: 500 / 500</b><p>Bio sir said “full marks”. Even the mitochondria are under pressure.</p></div></div>
+          </section>
+
+          <div class="section-heading">
+            <div><span class="eyebrow">YOUR PLAN</span>
+              <h2>Today's timetable</h2>
+            </div><button class="text-btn" data-goto="timetable">View full timetable <span>→</span></button>
+          </div>
+          <div class="panel schedule-panel">
+            <div class="panel-head">
+              <div><b>Study sessions</b><small>Your shared daily plan</small></div><span class="live-pill"><i></i>
+                LIVE</span>
+            </div>
+            <div id="todaySchedule" class="schedule-list">
+              <div class="empty-state">Loading your timetable…</div>
+            </div>
+          </div>
+          <div class="section-heading lower-heading">
+            <div><span class="eyebrow">RECENT WORK</span>
+              <h2>Latest activity</h2>
+            </div><button class="text-btn" data-goto="activity">See all activity <span>→</span></button>
+          </div>
+          <div class="panel recent-panel" id="recentActivity">
+            <div class="empty-state">Your completed sessions will appear here.</div>
+          </div>
+        </section>
+        <section id="page-timetable" class="page">
+          <div class="page-intro"><span class="eyebrow">YOUR EXAM ROADMAP</span>
+            <h1>Timetable<span class="period">.</span></h1>
+            <p class="muted">Every planned day, every task, and your live completion progress — loaded directly from <code>timetable.data</code>.</p>
+          </div>
+          <div class="timetable-overview panel">
+            <div class="tt-summary-top"><div><span class="eyebrow">OVERALL PREPARATION</span><h2 id="ttOverallPercent">0%</h2><p id="ttOverallCount" class="muted">0 of 0 tasks completed</p></div><div class="tt-summary-side"><b id="ttDaysCount">0</b><small>PLANNED DAYS</small></div></div>
+            <div class="tt-progress-track"><i id="ttOverallBar"></i></div>
+            <div class="tt-summary-bottom"><span>500 / 500 TARGET</span><span>Bio sir is watching. Even mitochondria are revising.</span></div>
+          </div>
+          <div class="tt-toolbar"><div><span class="eyebrow">DAY-BY-DAY PLAN</span><h2>All study days</h2></div><button type="button" id="ttExpandAll" class="text-btn">Expand all</button></div>
+          <div id="allDaysTimetable" class="all-days-list"><div class="empty-state">Loading all dates from timetable.data…</div></div>
+          <div id="legacyTimetableHooks" hidden><div id="dayTabs"><button data-day="Monday"></button></div><div id="fullSchedule"></div><span id="selectedDayLabel"></span></div>
+        </section>
+        <section id="page-activity" class="page">
+          <div class="page-intro"><span class="eyebrow">YOUR CONSISTENCY</span>
+            <h1>My activity<span class="period">.</span></h1>
+            <p class="muted">A personal record of the sessions you've completed.</p>
+          </div>
+          <div class="stats-grid activity-stats">
+            <article class="stat-card">
+              <div class="stat-top"><span>ALL-TIME COMPLETIONS</span><span class="stat-icon green">✓</span></div><strong
+                id="activityTotal">0</strong><small>Recorded study sessions</small>
+            </article>
+            <article class="stat-card">
+              <div class="stat-top"><span>LAST 7 DAYS</span><span class="stat-icon blue">◷</span></div><strong
+                id="weekTotal">0</strong><small>Recent completions</small>
+            </article>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div><b>Completion history</b><small>Your activity, newest first</small></div>
+            </div>
+            <div id="activityHistory" class="history-list">
+              <div class="empty-state">No activity yet.</div>
+            </div>
+          </div>
+        </section>
+        <section id="page-jarvis" class="page jarvis-page">
+          <div class="page-intro"><span class="eyebrow">YOUR STUDY COMPANION</span>
+            <h1>JARVIS Lite<span class="period">.</span></h1>
+            <p class="muted">Ask questions, understand concepts and organise your revision.</p>
+          </div>
+          <div class="chat-shell">
+            <div class="chat-top">
+              <div class="jarvis-symbol">✳</div>
+              <div><b>JARVIS LITE</b><small>AI STUDY ASSISTANT · GROQ</small></div><button id="clearChat"
+                class="clear-btn" type="button">Clear chat ↺</button>
+            </div>
+            <div id="chatMessages" class="chat-messages">
+              <div class="assistant-message">
+                <div class="message-avatar">✳</div>
+                <div class="message-body"><b>JARVIS LITE</b>
+                  <div class="rendered-content">
+                    <p>Hello! I'm ready to help you study. Ask me to explain a topic, make a revision plan, or create a
+                      flowchart.</p>
+                  </div>
+                  <div class="suggestions"><button type="button">Explain photosynthesis simply</button><button
+                      type="button">Make a flowchart for electricity</button><button type="button">Help me revise for an
+                      exam</button></div>
+                </div>
+              </div>
+            </div>
+            <form id="chatForm" class="chat-form"><textarea id="chatInput" rows="1"
+                placeholder="Ask JARVIS anything about your studies…" maxlength="4000"></textarea><button id="sendChat"
+                type="submit" aria-label="Send message">↑</button></form>
+            <div class="chat-disclaimer">JARVIS can make mistakes. Verify important academic information with your
+              textbook.</div>
+          </div>
+        </section>
+      </div>
+      <footer class="footer">STUDY HUB <span>·</span> POWERED BY VISAKA SOFTWARES</footer>
+    </main>
+  </section>
+  <div id="toast" class="toast" role="status"></div>
+
+  <script>
+    (() => {
+      'use strict';
+      const $ = id => document.getElementById(id);
+      const escapeHTML = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const dateLabel = key => {
+        const [y,m,d] = key.split('-').map(Number);
+        return new Date(y,m-1,d).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      };
+      const readProgress = key => { try { return JSON.parse(localStorage.getItem('studyhub-daily-'+key)||'{}'); } catch { return {}; } };
+      const writeProgress = (key,state) => localStorage.setItem('studyhub-daily-'+key,JSON.stringify(state));
+      const percent = (done,total) => total ? Math.round(done/total*100) : 0;
+      let plans = {};
+      function renderOverviewToday(){
+        const key = new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')+'-'+String(new Date().getDate()).padStart(2,'0');
+        const label = $('missionDate'), tasksEl = $('missionTasks');
+        if(label) label.textContent = dateLabel(key);
+        const plan = plans[key];
+        if(!tasksEl) return;
+        if(!plan || !Array.isArray(plan.tasks) || !plan.tasks.length){ tasksEl.innerHTML='<div class="mission-empty">No tasks planned for today. Check the upcoming dates in your timetable.</div>'; updateMission(0,0); return; }
+        const saved=readProgress(key);
+        tasksEl.innerHTML=plan.tasks.map((task,i)=>`<label class="mission-task ${saved[i]?'done':''}"><input type="checkbox" data-index="${i}" ${saved[i]?'checked':''}><span>${escapeHTML(task)}</span></label>`).join('');
+        tasksEl.querySelectorAll('input').forEach(box=>box.addEventListener('change',()=>{const state=readProgress(key);state[box.dataset.index]=box.checked;writeProgress(key,state);box.closest('.mission-task').classList.toggle('done',box.checked);const boxes=[...tasksEl.querySelectorAll('input')];updateMission(boxes.filter(x=>x.checked).length,boxes.length);refreshAllDays();}));
+        updateMission(Object.values(saved).filter(Boolean).length,plan.tasks.length);
+      }
+      function updateMission(done,total){const p=percent(done,total);if($('missionPercent'))$('missionPercent').textContent=p+'%';if($('missionProgressBar'))$('missionProgressBar').style.width=p+'%';if($('missionCount'))$('missionCount').textContent=`${done} of ${total} tasks completed`;}
+      function renderAllDays(){
+        const host=$('allDaysTimetable'); if(!host)return;
+        const entries=Object.entries(plans).filter(([,v])=>v&&Array.isArray(v.tasks)).sort(([a],[b])=>a.localeCompare(b));
+        if(!entries.length){host.innerHTML='<div class="mission-empty">No dated plans found. Add dates and task arrays to timetable.data.</div>';return;}
+        host.innerHTML=entries.map(([key,plan],idx)=>{
+          const saved=readProgress(key), total=plan.tasks.length, done=plan.tasks.filter((_,i)=>saved[i]===true).length, p=percent(done,total);
+          const todayKey=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')+'-'+String(new Date().getDate()).padStart(2,'0');
+          const today=key===todayKey;
+          const exam=plan.tasks.some(t=>/EXAM/i.test(t));
+          return `<article class="tt-day-card ${today?'is-today':''}" data-date="${key}">
+            <button class="tt-day-head" type="button" aria-expanded="${idx===0||today?'true':'false'}" aria-controls="tt-tasks-${key}">
+              <span class="tt-date-block"><span class="tt-weekday">${escapeHTML(new Date(...key.split('-').map((v,i)=>i===1?Number(v)-1:Number(v))).toLocaleDateString('en-IN',{weekday:'short'}).toUpperCase())}</span><b>${escapeHTML(key.slice(8,10))}</b><small>${escapeHTML(new Date(Number(key.slice(0,4)),Number(key.slice(5,7))-1,Number(key.slice(8,10))).toLocaleDateString('en-IN',{month:'short',year:'numeric'}))}</small></span>
+              <span class="tt-day-info"><strong>${escapeHTML(dateLabel(key))}${today?' <em class="tt-today-tag">TODAY</em>':''}${exam?' <em class="tt-exam-tag">EXAM</em>':''}</strong><small>${done} / ${total} tasks completed</small><span class="tt-mini-track"><i style="width:${p}%"></i></span></span>
+              <span class="tt-day-percent">${p}% <span class="tt-chevron">⌄</span></span>
+            </button>
+            <div class="tt-day-tasks" id="tt-tasks-${key}" ${idx===0||today?'':'hidden'}>${plan.tasks.map((task,i)=>`<label class="mission-task ${saved[i]===true?'done':''}"><input type="checkbox" data-date="${key}" data-index="${i}" ${saved[i]===true?'checked':''}><span>${escapeHTML(task)}</span></label>`).join('')}<div class="tt-day-footer"><span>${done===total&&total?'Day completed ✓':'Keep going — one task at a time.'}</span><b>${p}% complete</b></div></div>
+          </article>`;
+        }).join('');
+        host.querySelectorAll('.tt-day-head').forEach(btn=>btn.addEventListener('click',()=>{const panel=$(btn.getAttribute('aria-controls'));const open=btn.getAttribute('aria-expanded')==='true';btn.setAttribute('aria-expanded',String(!open));panel.hidden=open;}));
+        host.querySelectorAll('input[type=checkbox]').forEach(box=>box.addEventListener('change',()=>{const key=box.dataset.date,state=readProgress(key);state[box.dataset.index]=box.checked;writeProgress(key,state);box.closest('.mission-task').classList.toggle('done',box.checked);renderAllDays();renderOverviewToday();}));
+        const all=entries.reduce((n,[,v])=>n+v.tasks.length,0), done=entries.reduce((n,[key,v])=>n+v.tasks.filter((_,i)=>readProgress(key)[i]===true).length,0), p=percent(done,all);
+        if($('ttOverallPercent'))$('ttOverallPercent').textContent=p+'%';if($('ttOverallCount'))$('ttOverallCount').textContent=`${done} of ${all} tasks completed`;if($('ttOverallBar'))$('ttOverallBar').style.width=p+'%';if($('ttDaysCount'))$('ttDaysCount').textContent=entries.length;
+      }
+      function refreshAllDays(){renderAllDays();}
+      async function init(){
+        try{const response=await fetch('./timetable.data',{cache:'no-store'});if(!response.ok)throw new Error(`timetable.data returned ${response.status}`);const data=await response.json();if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('timetable.data must contain a date-keyed JSON object');plans=data;renderOverviewToday();renderAllDays();}
+        catch(error){const msg=escapeHTML(error.message)+'. Keep timetable.data beside index.html and run the site through a web server (not file://).';if($('missionTasks'))$('missionTasks').innerHTML=`<div class="mission-empty">${msg}</div>`;if($('allDaysTimetable'))$('allDaysTimetable').innerHTML=`<div class="mission-empty">${msg}</div>`;updateMission(0,0);}
+      }
+      $('ttExpandAll')?.addEventListener('click',()=>{const cards=[...document.querySelectorAll('.tt-day-head')];const expand=cards.some(b=>b.getAttribute('aria-expanded')==='false');cards.forEach(b=>{b.setAttribute('aria-expanded',String(expand));$(b.getAttribute('aria-controls')).hidden=!expand;});$('ttExpandAll').textContent=expand?'Collapse all':'Expand all';});
+      init();
+    })();
+  </script>
+
+</body>
+
+</html>
